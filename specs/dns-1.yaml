@@ -22,5 +22,14 @@ networks:
   # router-1 経由で 192.168.203.30 に到達させる(README「router-1側の許可ルール」)。
   - name: seg3
     address: 192.168.203.30/24   # gatewayなし(直接接続ルートで到達性は足りる)
+# seg1/seg2 のクライアントへの「戻り経路」。クエリは client -> router-1 -> dns-1
+# と届くが、この経路が無いと応答がデフォルトルート(管理NIC)へ非対称に流れ、
+# ホストの libvirt ルールで落とされて応答が返らない。router-appliance README が
+# クライアント側に求める static_routes と対称の設定。
+static_routes:
+  - destination: 192.168.201.0/24
+    via: 192.168.203.10   # router-1 の seg3 側IP
+  - destination: 192.168.202.0/24
+    via: 192.168.203.10
 # filtersは未設定(デフォルトnull=libvirt側の追加inbound制限なし)。
 # 受信保護はゴールデンイメージに焼き込んだゲスト内nftables(input chain)が担う。
