@@ -1,0 +1,35 @@
+// minivps-dns-appliance: BIND9 options。
+// パッケージ同梱の /etc/bind/named.conf からincludeされる(named.conf自体は
+// 変更せず、Debianの分割規約に従い options / local の2ファイルだけ差し替える)。
+
+// 再帰問い合わせを許可する内部レンジ。
+acl "rfc1918" {
+    10.0.0.0/8;
+    172.16.0.0/12;
+    192.168.0.0/16;
+};
+
+options {
+    directory "/var/cache/bind";
+
+    // 内部クライアント向けの再帰リゾルバを兼ねる。外部には公開しない
+    // (ゲスト内nftablesでも53番はRFC1918からのみ許可している。多層防御)。
+    recursion yes;
+    allow-query { localhost; rfc1918; };
+    allow-recursion { localhost; rfc1918; };
+
+    // 外部名は seg3 ゲートウェイの libvirt dnsmasq へ転送して解決する。
+    // forward先を変更する場合はこの forwarders を書き換えて
+    // `sudo systemctl reload named` する(README「外部名の解決」参照)。
+    forwarders { 192.168.203.1; };
+    forward only;
+
+    // forwarder が libvirt の dnsmasq(DNSSEC非対応の単純フォワーダ)のため、
+    // 検証を有効にすると外部の署名済みドメインが SERVFAIL になりうる。
+    // DNSSEC は本構成のスコープ外であり、明示的に無効化する。
+    dnssec-validation no;
+
+    // specs/dns-1.yaml の静的IPに合わせる。
+    listen-on { 127.0.0.1; 192.168.122.30; 192.168.203.30; };
+    listen-on-v6 { none; };
+};

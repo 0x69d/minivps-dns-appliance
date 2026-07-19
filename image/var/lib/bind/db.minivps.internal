@@ -1,0 +1,17 @@
+; minivps.internal 正引きゾーン(動的更新対象)。
+; 注意: named稼働中の直接編集は禁止(journalと矛盾する)。手動編集は
+; rndc freeze -> 編集 -> rndc thaw で行う(READMEトラブルシューティング参照)。
+; 動的更新の反映時にnamedがこのファイルを書き戻すため、コメントは失われる。
+$ORIGIN minivps.internal.
+$TTL 3600
+@       IN SOA  ns1.minivps.internal. hostmaster.minivps.internal. (
+                1          ; serial
+                3600       ; refresh
+                900        ; retry
+                604800     ; expire
+                300 )      ; negative cache TTL
+        IN NS   ns1.minivps.internal.
+; ns1 はクライアントが参照するサービス提供IP(seg3側)。
+ns1     IN A    192.168.203.30
+; dns-1 は mini-vps-platform の自動登録規約(最初の静的NIC=管理IP)に合わせる。
+dns-1   IN A    192.168.122.30

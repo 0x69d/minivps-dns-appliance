@@ -1,0 +1,40 @@
+// minivps-dns-appliance: 権威ゾーン定義。
+// パッケージ同梱の /etc/bind/named.conf からincludeされる。
+
+// 動的更新(nsupdate)用のTSIG鍵。ゴールデンイメージには焼き込まず、初回起動時に
+// 運用者が配置する(手順はREADME「TSIG鍵の初期化」)。このファイルが存在するまで
+// named は起動に失敗する(fail-loud: 鍵なしでゾーンが書ける状態を作らない)。
+include "/etc/bind/minivps-update.key";
+
+// ゾーンファイルは /etc/bind ではなく /var/lib/bind に置く。
+// Debian/UbuntuのAppArmorプロファイルは /etc/bind を読み取り専用としており、
+// 動的更新のjournal(.jnl)作成や rndc freeze 時のゾーン書き戻しができないため。
+zone "minivps.internal" {
+    type primary;
+    file "/var/lib/bind/db.minivps.internal";
+    allow-update { key "minivps-update"; };
+};
+
+zone "122.168.192.in-addr.arpa" {
+    type primary;
+    file "/var/lib/bind/db.192.168.122";
+    allow-update { key "minivps-update"; };
+};
+
+zone "201.168.192.in-addr.arpa" {
+    type primary;
+    file "/var/lib/bind/db.192.168.201";
+    allow-update { key "minivps-update"; };
+};
+
+zone "202.168.192.in-addr.arpa" {
+    type primary;
+    file "/var/lib/bind/db.192.168.202";
+    allow-update { key "minivps-update"; };
+};
+
+zone "203.168.192.in-addr.arpa" {
+    type primary;
+    file "/var/lib/bind/db.192.168.203";
+    allow-update { key "minivps-update"; };
+};
