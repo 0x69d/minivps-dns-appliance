@@ -1,6 +1,5 @@
 // minivps-dns-appliance: BIND9 options。
-// パッケージ同梱の /etc/bind/named.conf からincludeされる(named.conf自体は
-// 変更せず、Debianの分割規約に従い options / local の2ファイルだけ差し替える)。
+// パッケージ同梱の /etc/bind/named.conf からincludeされる。
 
 // 再帰問い合わせを許可する内部レンジ。
 acl "rfc1918" {
@@ -13,7 +12,6 @@ options {
     directory "/var/cache/bind";
 
     // 内部クライアント向けの再帰リゾルバを兼ねる。外部には公開しない
-    // (ゲスト内nftablesでも53番はRFC1918からのみ許可している。多層防御)。
     recursion yes;
     allow-query { localhost; rfc1918; };
     allow-recursion { localhost; rfc1918; };

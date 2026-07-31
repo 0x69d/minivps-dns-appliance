@@ -1,5 +1,5 @@
-; 203.168.192.in-addr.arpa 逆引きゾーン: seg3(動的更新対象)。
-; 手動編集は rndc freeze -> 編集 -> rndc thaw で行う(README参照)。
+; 203.168.192.in-addr.arpa 逆引きゾーン: seg3。
+; 手動編集は rndc freeze -> 編集 -> rndc thaw で行う。
 $ORIGIN 203.168.192.in-addr.arpa.
 $TTL 3600
 @       IN SOA  ns1.minivps.internal. hostmaster.minivps.internal. (
