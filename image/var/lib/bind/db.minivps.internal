@@ -1,6 +1,6 @@
-; minivps.internal 正引きゾーン(動的更新対象)。
-; 注意: named稼働中の直接編集は禁止(journalと矛盾する)。手動編集は
-; rndc freeze -> 編集 -> rndc thaw で行う(READMEトラブルシューティング参照)。
+; minivps.internal 正引きゾーン。
+; 注意: named稼働中の直接編集は禁止。journalと矛盾する。手動編集は
+; rndc freeze -> 編集 -> rndc thaw で行う。
 ; 動的更新の反映時にnamedがこのファイルを書き戻すため、コメントは失われる。
 $ORIGIN minivps.internal.
 $TTL 3600
@@ -11,7 +11,7 @@ $TTL 3600
                 604800     ; expire
                 300 )      ; negative cache TTL
         IN NS   ns1.minivps.internal.
-; ns1 はクライアントが参照するサービス提供IP(seg3側)。
+; ns1 はクライアントが参照するサービス提供IP。
 ns1     IN A    192.168.203.30
-; dns-1 は mini-vps-platform の自動登録規約(最初の静的NIC=管理IP)に合わせる。
+; dns-1 は mini-vps-platformの規約(最初の静的NIC=管理IP)に合わせている。
 dns-1   IN A    192.168.122.30

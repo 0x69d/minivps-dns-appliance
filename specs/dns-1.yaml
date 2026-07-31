@@ -2,7 +2,6 @@
 # `uv run mini-vps create specs/dns-1.yaml` で作成する。
 #
 # base_image は build/build-golden-image.sh の出力ファイル名に置き換えること
-# (ビルドのたびにファイル名の日付部分が変わるため)。
 name: dns-1
 memory: 1024
 vcpus: 2
@@ -10,26 +9,24 @@ base_image: minivps-dns-golden-20260719.qcow2
 disk: 10
 hostname: dns-1
 networks:
-  # 1件目 = 管理NIC。router-1 と同じ理由であえて静的IPにする。
-  # 理由: mini_vps/manager.py の _static_ipv4() は networks の先頭から走査して
+  # 1件目 = 管理NIC。静的IPにする。
+  # mini_vps/manager.py の _static_ipv4() は networks の先頭から走査して
   # 最初に見つかった静的NICのIPを `mini-vps status`/`get` に返す。管理NICを
   # 先頭かつ静的にすることで、複数の固定IPを持つこのVMでも
   # 「mini-vps status dns-1」がSSH到達可能な管理IPを返す。
   - name: default
     address: 192.168.122.30/24
     gateway: 192.168.122.1   # このVM唯一のデフォルトルート
-  # 2件目 = サービスNIC。seg3 に単一配置し、seg1/seg2 のクライアントからは
-  # router-1 経由で 192.168.203.30 に到達させる(README「router-1側の許可ルール」)。
+  # 2件目 = サービスNIC。seg3 に配置し、seg1/seg2 のクライアントからは
+  # router-1 経由で 192.168.203.30 に到達させる。
   - name: seg3
-    address: 192.168.203.30/24   # gatewayなし(直接接続ルートで到達性は足りる)
+    address: 192.168.203.30/24
 # seg1/seg2 のクライアントへの「戻り経路」。クエリは client -> router-1 -> dns-1
-# と届くが、この経路が無いと応答がデフォルトルート(管理NIC)へ非対称に流れ、
-# ホストの libvirt ルールで落とされて応答が返らない。router-appliance README が
-# クライアント側に求める static_routes と対称の設定。
+# と届くが、この経路が無いと応答がデフォルトルート(管理NIC)へ非対称に流れて応答が返らない。
 static_routes:
   - destination: 192.168.201.0/24
     via: 192.168.203.10   # router-1 の seg3 側IP
   - destination: 192.168.202.0/24
     via: 192.168.203.10
 # filtersは未設定(デフォルトnull=libvirt側の追加inbound制限なし)。
-# 受信保護はゴールデンイメージに焼き込んだゲスト内nftables(input chain)が担う。
+# 受信保護はゴールデンイメージに焼き込んだゲスト内nftablesのinput chainが担う。

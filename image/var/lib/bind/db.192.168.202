@@ -1,6 +1,6 @@
-; 202.168.192.in-addr.arpa 逆引きゾーン: seg2(動的更新対象)。
-; 初期レコードは無し(VMのPTRはmini-vps-platformの自動登録またはnsupdateで追加する)。
-; 手動編集は rndc freeze -> 編集 -> rndc thaw で行う(README参照)。
+; 202.168.192.in-addr.arpa 逆引きゾーン: seg2。
+; 初期レコードはなし。VMのPTRはmini-vps-platformの自動登録またはnsupdateで追加する。
+; 手動編集は rndc freeze -> 編集 -> rndc thaw で行う。
 $ORIGIN 202.168.192.in-addr.arpa.
 $TTL 3600
 @       IN SOA  ns1.minivps.internal. hostmaster.minivps.internal. (
