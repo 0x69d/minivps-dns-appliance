@@ -188,7 +188,7 @@ A(minivps.internal)とPTR(in-addr.arpa)は別ゾーンのため`send`を分け�
 
 ## トラブルシューティング
 
-- ビルドがタイムアウトした場合: `virsh console <ビルドVM名>` でシリアルコンソールに接続して調査する。ビルド用ドメインはtransientで、シャットダウンと同時に消滅する点に注意。
+- ビルドがタイムアウトした場合: 調査のためビルドVMとそのディスクは意図的に残される。表示されるSSH手順で `cloud-init status --long` と `/var/log/cloud-init-output.log` を確認する。cloud-initの初期段階で止まっているとSSHは通らないため、その場合は `virsh console <ビルドVM名>` でシリアルコンソールから調査する。調査後は `virsh destroy <ビルドVM名>` で破棄すれば、残骸は次回実行の冒頭掃除が回収する。
 - namedが起動しない(作成直後): TSIG鍵が未配置なら仕様。[TSIG鍵の初期化](#tsig鍵の初期化)を実施する。
 - 動的更新対象ゾーンの手動編集: 稼働中のゾーンファイルを直接編集してはならない。journal(`.jnl`)と矛盾し、変更が失われるかゾーンのロードに失敗する。必ずfreezeしてから編集する:
   ```bash
