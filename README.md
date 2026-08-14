@@ -183,7 +183,7 @@ A(minivps.internal)とPTR(in-addr.arpa)は別ゾーンのため`send`を分け�
 
 ## tests
 
-- `tests/lint-nftables.sh` — nftables.confの構文チェック。
+- `tests/lint-nftables.sh` — nftables.confの構文チェック(要`nft`・CAP_NET_ADMIN。sudoで実行する)。
 - `tests/check-bind.sh` — ゾーンファイル5本の`named-checkzone`と、パス差し替えコピーによる`named-checkconf`(要`bind9-utils`)。
 
 ## トラブルシューティング
