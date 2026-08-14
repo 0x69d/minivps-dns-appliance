@@ -41,13 +41,19 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKDIR="$(mktemp -d /var/tmp/minivps-dns-build.XXXXXX)"
 
 cleanup() {
-  # transientドメインはpoweroffで即座にdestroy&削除されるため、
-  # 保険としての destroy/undefine はベストエフォートで構わない。
-  virsh destroy "$BUILD_VM_NAME" >/dev/null 2>&1 || true
-  virsh undefine "$BUILD_VM_NAME" --nvram >/dev/null 2>&1 || true
-  # 一時volumeは常に破棄する。
-  virsh vol-delete --pool "$IMAGES_POOL" "$TEMP_DISK_VOL" >/dev/null 2>&1 || true
-  virsh vol-delete --pool "$SEEDS_POOL" "$TEMP_SEED_VOL" >/dev/null 2>&1 || true
+  # タイムアウト時はビルドVMとそのディスク/seedを意図的に残す。ゲスト内で何が
+  # 失敗したかを cloud-init status / cloud-init-output.log でSSH調査するためで、
+  # transientドメインを破棄すると証拠ごと消えてしまう。調査後は
+  # `virsh destroy <VM名>` すれば、次回実行の冒頭掃除が残骸を回収する。
+  if [ -z "${PRESERVE_BUILD_VM:-}" ]; then
+    # transientドメインはpoweroffで即座にdestroy&削除されるため、
+    # 保険としての destroy/undefine はベストエフォートで構わない。
+    virsh destroy "$BUILD_VM_NAME" >/dev/null 2>&1 || true
+    virsh undefine "$BUILD_VM_NAME" --nvram >/dev/null 2>&1 || true
+    # 一時volumeは常に破棄する。成功時はGOLDEN_IMAGE_NAMEへ確定済みで不要になる。
+    virsh vol-delete --pool "$IMAGES_POOL" "$TEMP_DISK_VOL" >/dev/null 2>&1 || true
+    virsh vol-delete --pool "$SEEDS_POOL" "$TEMP_SEED_VOL" >/dev/null 2>&1 || true
+  fi
   rm -rf "$WORKDIR"
 }
 trap cleanup EXIT
@@ -228,7 +234,18 @@ while virsh domstate "$BUILD_VM_NAME" >/dev/null 2>&1; do
   sleep 5
   elapsed=$((elapsed + 5))
   if [ "$elapsed" -ge "$WAIT_TIMEOUT_SEC" ]; then
-    echo "タイムアウト。virsh console $BUILD_VM_NAME で調査してください" >&2
+    PRESERVE_BUILD_VM=1
+    # 同名ホストの古いリースを拾わないよう、ビルドVMのMACでDHCPリースを引く。
+    BUILD_MAC="$(virsh domiflist "$BUILD_VM_NAME" | awk '/network/ {print $5}' | head -1)"
+    BUILD_IP="$(virsh net-dhcp-leases default 2>/dev/null \
+      | awk -v mac="$BUILD_MAC" '$0 ~ mac {print $5}' | tail -1 | cut -d/ -f1)"
+    echo "タイムアウト。調査のためビルドVMを残します:" >&2
+    echo "  ssh -i ${SSH_PUBKEY_PATH%.pub} ubuntu@${BUILD_IP:-<IP不明>}" >&2
+    echo "  sudo cloud-init status --long; sudo tail /var/log/cloud-init-output.log" >&2
+    # cloud-initの初期段階で止まるとsshdもauthorized_keysもまだ整っておらずSSHは通らない。
+    # ビルドVMを残すようになったことで、シリアルコンソールからの調査が可能になった。
+    echo "SSHが繋がらない場合は virsh console $BUILD_VM_NAME でシリアルコンソールから調査する" >&2
+    echo "調査後は virsh destroy $BUILD_VM_NAME で破棄してください" >&2
     exit 1
   fi
 done
